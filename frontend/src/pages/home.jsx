@@ -3,10 +3,13 @@
 // src/pages/Home.jsx
 import { Link } from 'react-router-dom'
 import './../css/home.css'
+import Navbar from '../components/navbar.jsx'
+import './../css/home.css'
 
 export default function Home() {
   return (
     <div className='container'>
+        <Navbar />
         <div className='part1'>
             <div className='logo-header'>LEETMENTOR</div>
         </div>
