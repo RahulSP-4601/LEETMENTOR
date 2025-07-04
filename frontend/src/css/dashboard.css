@@ -1,0 +1,36 @@
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+  background-color: #0f172a;
+  color: #f1f5f9;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  padding: 40px;
+  background-color: #0f172a;
+  overflow-y: auto;
+}
+
+.main-content h1 {
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.start-practice-btn {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 30px;
+  transition: background-color 0.3s ease;
+}
+
+.start-practice-btn:hover {
+  background-color: #2563eb;
+}

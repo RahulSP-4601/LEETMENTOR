@@ -1,0 +1,92 @@
+.problem-table {
+  padding: 40px;
+  width: 100%;
+  background-color: #0f172a;
+}
+
+.problem-table h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 14px 16px;
+  text-align: left;
+}
+
+thead {
+  background-color: #1e293b;
+}
+
+thead th {
+  font-size: 14px;
+  color: #cbd5e1;
+  border-bottom: 1px solid #334155;
+}
+
+tbody tr {
+  border-bottom: 1px solid #1e293b;
+}
+
+tbody tr:hover {
+  background-color: #1e293b;
+}
+
+td {
+  font-size: 15px;
+  color: #e2e8f0;
+}
+
+.difficulty {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 13px;
+  display: inline-block;
+}
+
+.difficulty.easy {
+  background-color: #22c55e;
+  color: white;
+}
+
+.difficulty.medium {
+  background-color: #f97316;
+  color: white;
+}
+
+.difficulty.hard {
+  background-color: #ef4444;
+  color: white;
+}
+
+.start-practice-btn {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 30px;
+  transition: background-color 0.3s ease;
+}
+
+.start-practice-btn:hover {
+  background-color: #2563eb;
+}
+
+.problem-table h1 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  font-weight: 700;
+  color: #ffffff;
+}

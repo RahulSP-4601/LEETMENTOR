@@ -1,8 +1,10 @@
+// App.jsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Home from './pages/home.jsx'
 import GetStarted from './pages/getstarted.jsx'
 import Login from './pages/login.jsx'
 import Signup from './pages/signup.jsx'
+import Dashboard from './pages/dashboard.jsx' // <-- Import
 
 function App() {
   return (
@@ -12,6 +14,7 @@ function App() {
         <Route path="/get-started" element={<GetStarted />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/dashboard" element={<Dashboard />} /> {/* <-- Add this */}
       </Routes>
     </Router>
   )
