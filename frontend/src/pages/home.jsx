@@ -2,7 +2,6 @@
 
 // src/pages/Home.jsx
 import { Link } from 'react-router-dom'
-import './../css/home.css'
 import Navbar from '../components/navbar.jsx'
 import './../css/home.css'
 

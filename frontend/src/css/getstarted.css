@@ -1,0 +1,29 @@
+/* getstarted.css */
+.getstarted-container {
+  height: 100vh;
+  background: linear-gradient(135deg, #2e2e9b, #1d1d75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.getstarted-box {
+  display: flex;
+  gap: 30px;
+}
+
+.getstarted-btn {
+  padding: 14px 32px;
+  background-color: white;
+  color: #2e2e9b;
+  font-weight: bold;
+  font-size: 20px;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.getstarted-btn:hover {
+  background-color: #61dafb;
+  color: white;
+}
