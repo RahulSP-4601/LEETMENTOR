@@ -7,7 +7,7 @@ export default function Navbar() {
       <div className="nav-content">
         <div className="nav-logo">LEETMENTOR</div>
         <div className="nav-links">
-          <Link to="/get-started">Get Started</Link>
+          <Link to="./../pages/getstarted.jsx">Get Started</Link>
           {/* Add more options later as needed */}
         </div>
       </div>
