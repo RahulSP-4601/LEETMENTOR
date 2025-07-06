@@ -90,3 +90,13 @@ td {
   font-weight: 700;
   color: #ffffff;
 }
+
+.problem-link {
+  color: #60a5fa;
+  text-decoration: none;
+}
+
+.problem-link:hover {
+  text-decoration: underline;
+  color: #3b82f6;
+}

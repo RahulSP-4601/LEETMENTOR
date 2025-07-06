@@ -1,5 +1,6 @@
 // src/components/ProblemTable.jsx
 import '../css/problemTable.css'
+import { Link } from 'react-router-dom'
 
 export default function ProblemTable() {
   const problems = [
@@ -31,7 +32,11 @@ export default function ProblemTable() {
           {problems.map((problem) => (
             <tr key={problem.id}>
               <td>{problem.id}</td>
-              <td>{problem.title}</td>
+              <td>
+                <Link to={`/problems/${problem.id}`} className="problem-link">
+                  {problem.title}
+                </Link>
+              </td>
               <td>
                 <span className={`difficulty ${problem.difficulty.toLowerCase()}`}>
                   {problem.difficulty}
