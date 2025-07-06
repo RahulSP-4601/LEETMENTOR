@@ -4,6 +4,7 @@ import { useState } from 'react'
 import ChatBox from './../../components/ChatBox.jsx'
 import CodeEditor from './../../components/CodeEditor.jsx'
 import './../../css/problemPage.css'
+import TestCase from './../../components/TestCase'
 
 const dummyProblem = {
   id: 1,
@@ -60,6 +61,7 @@ function ProblemPage() {
         </div>
 
         <CodeEditor language={language} code={code} setCode={setCode} />
+        <TestCase />
       </div>
     </div>
   )
