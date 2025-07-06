@@ -1,6 +1,12 @@
 from flask import request, jsonify
-from app.services.user_service import create_user, get_user_by_email, validate_user
+from werkzeug.security import check_password_hash
+from app.services.user_service import create_user, get_user_by_email
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask import Blueprint
 
+auth_bp = Blueprint('auth_bp', __name__)
+
+@auth_bp.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json()
     name = data.get('name')
@@ -13,13 +19,21 @@ def signup():
     user = create_user(name, email, password)
     return jsonify({'message': 'Signup successful', 'user': {'id': user.id, 'email': user.email}}), 201
 
+@auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
+    email = data.get("email")
+    password = data.get("password")
 
-    user = validate_user(email, password)
-    if user:
-        return jsonify({'message': 'Login successful', 'user': {'id': user.id, 'email': user.email}}), 200
-    else:
-        return jsonify({'error': 'Invalid credentials'}), 401
+    user = get_user_by_email(email)
+    if not user or not check_password_hash(user.password, password):
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    access_token = create_access_token(identity=user.id)
+    return jsonify(access_token=access_token), 200
+
+@auth_bp.route("/protected", methods=["GET"])
+@jwt_required()
+def protected():
+    user_id = get_jwt_identity()
+    return jsonify(message=f"Welcome, user {user_id}!")
