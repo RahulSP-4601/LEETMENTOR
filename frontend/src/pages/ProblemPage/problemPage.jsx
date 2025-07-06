@@ -1,5 +1,4 @@
-// src/pages/ProblemPage.jsx
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import ChatBox from './../../components/ChatBox.jsx'
 import CodeEditor from './../../components/CodeEditor.jsx'
@@ -21,7 +20,11 @@ function ProblemPage() {
   const [language, setLanguage] = useState('python')
   const [code, setCode] = useState('')
   const [chat, setChat] = useState('Hello, I’ll be conducting your coding interview today.')
+  const navigate = useNavigate()
 
+  const handleGoBack = () => {
+    navigate('/dashboard')
+  }
   return (
     <div className="problem-container">
       <div className="left-section">
@@ -36,6 +39,9 @@ function ProblemPage() {
       <div className="right-section">
         <div className="top-bar">
           <h1>AI Interview</h1>
+          <button className="go-back-btn" onClick={handleGoBack}>
+            Go Back
+          </button>
         </div>
 
         <div className="editor-header">

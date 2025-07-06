@@ -138,3 +138,21 @@
 .leave-btn:hover {
   background-color: #ff5454;
 }
+
+.go-back-btn {
+  background-color: #facc15; /* amber-400 */
+  color: #1e293b;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.go-back-btn:hover {
+  background-color: #fbbf24; /* slightly darker amber */
+  transform: translateY(-1px);
+}
