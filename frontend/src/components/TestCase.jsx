@@ -26,7 +26,7 @@ function TestCase() {
   return (
     <div className="test-case-container">
       <div className="test-case-header">
-        <h3>Test Cases</h3>
+        <span>Test Cases</span>
         <div className="circle-btns">
           {testCases.map((_, i) => (
             <button
@@ -42,9 +42,9 @@ function TestCase() {
       </div>
 
       <div className="test-case-content">
-        <p><strong>Input:</strong> {testCases[selectedIndex].input}</p>
-        <p><strong>Your Output:</strong> {testCases[selectedIndex].output}</p>
-        <p><strong>Expected Output:</strong> {testCases[selectedIndex].expected}</p>
+        <p>Input:{testCases[selectedIndex].input}</p>
+        <p>Your Output: {testCases[selectedIndex].output}</p>
+        <p>Expected Output: {testCases[selectedIndex].expected}</p>
       </div>
     </div>
   )

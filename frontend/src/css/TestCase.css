@@ -1,5 +1,5 @@
 .test-case-container {
-  background-color: #000;
+  background-color: #000000da;
   color: #fff;
   padding: 16px 20px;
   font-family: "Segoe UI", sans-serif;
@@ -32,6 +32,7 @@
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-size: 18px;
 }
 
 .circle-btn:hover {
@@ -50,7 +51,6 @@
 }
 
 .test-case-content p {
-  margin-top: 10px;
   margin: 8px 0;
   font-weight: 500;
 }
