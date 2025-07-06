@@ -8,3 +8,4 @@ class User(db.Model):
     email = db.Column(db.String, unique=True, nullable=False)
     password = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
+    jwt_token = db.Column(db.Text, nullable=True)  # NEW: for storing current token

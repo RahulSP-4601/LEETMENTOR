@@ -17,3 +17,6 @@ def validate_user(email, password):
     if user and check_password_hash(user.password, password):
         return user
     return None
+
+def get_user_by_email_id(user_id):
+    return User.query.get(user_id)
