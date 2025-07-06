@@ -9,13 +9,14 @@
   background-color: #334155;
   color: white;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 52px;
+  height: 52px;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 20px;
+  margin-top: 10px;
 }
 
 .chat-msg {
@@ -25,6 +26,7 @@
   border-radius: 10px;
   font-size: 14px;
   max-width: 80%;
+  font-size: 20px;
 }
 
 .chat-input-row {
@@ -37,7 +39,7 @@
   padding: 10px 12px;
   border-radius: 8px;
   border: none;
-  font-size: 14px;
+  font-size: 20px;
 }
 
 .mic-button {
