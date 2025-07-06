@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from werkzeug.security import check_password_hash
-from app.services.user_service import create_user, get_user_by_email
+from app.services.user_service import create_user, get_user_by_email, get_user_by_email_id
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask import Blueprint
 from app.extensions import db 
@@ -49,12 +49,16 @@ def protected():
 
     return jsonify(message=f"Welcome, user {user.id}!")
 
-@auth_bp.route("/logout", methods=["POST"])
+@auth_bp.route("/logout", methods=["POST", "OPTIONS"])
 @jwt_required()
 def logout():
+    if request.method == "OPTIONS":
+        return jsonify({}), 200  # Return OK for preflight
+
     user_id = get_jwt_identity()
     user = get_user_by_email_id(user_id)
 
     user.jwt_token = None
     db.session.commit()
     return jsonify(message="Successfully logged out"), 200
+

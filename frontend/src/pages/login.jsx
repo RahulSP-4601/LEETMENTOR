@@ -1,10 +1,12 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
 
 function Login() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [message, setMessage] = useState("")
+  const { login } = useAuth()
   const navigate = useNavigate()
 
   const handleLogin = async () => {
@@ -18,9 +20,7 @@ function Login() {
       const data = await response.json()
 
       if (response.ok) {
-        setMessage("Login successful!")
-        // Optionally save user data in localStorage
-        // localStorage.setItem("user", JSON.stringify(data.user))
+        login(data.access_token) // save JWT in memory
         navigate("/dashboard")
       } else {
         setMessage(data.error || "Login failed")
