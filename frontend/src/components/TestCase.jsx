@@ -1,10 +1,13 @@
 // src/components/TestCase.jsx
 import { useState } from 'react'
 import '../css/TestCase.css'
-function TestCase({ testCases }) {
+
+export default function TestCase({ testCases, results }) {
   const [selectedIndex, setSelectedIndex] = useState(0)
 
   if (!testCases.length) return <div>No test cases available.</div>
+
+  const currentResult = results?.[selectedIndex]
 
   return (
     <div className="test-case-container">
@@ -26,11 +29,14 @@ function TestCase({ testCases }) {
 
       <div className="test-case-content">
         <p>Input: {testCases[selectedIndex].input}</p>
-        <p>Your Output: -</p>
+        <p>Your Output: {currentResult ? currentResult.output : '-'}</p>
         <p>Expected Output: {testCases[selectedIndex].expected_output}</p>
+        {currentResult && (
+          <p style={{ color: currentResult.passed ? 'lime' : 'red' }}>
+            {currentResult.passed ? '✔ Passed' : '❌ Failed'}
+          </p>
+        )}
       </div>
     </div>
   )
 }
-
-export default TestCase

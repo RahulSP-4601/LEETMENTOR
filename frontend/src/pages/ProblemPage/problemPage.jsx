@@ -17,13 +17,14 @@ function ProblemPage() {
   const [chat, setChat] = useState('Hello, I’ll be conducting your coding interview today.')
   const [problem, setProblem] = useState(null)
   const [testCases, setTestCases] = useState([])
+  const [results, setResults] = useState([])
 
+  // Fetch problem + test cases
   useEffect(() => {
     const fetchProblem = async () => {
       try {
         const res = await fetch(`http://127.0.0.1:5000/api/problems/${id}`)
         const data = await res.json()
-
         setProblem(data.problem)
         setTestCases(data.test_cases)
       } catch (error) {
@@ -34,8 +35,44 @@ function ProblemPage() {
     fetchProblem()
   }, [id])
 
+  // Fetch starter code
+  useEffect(() => {
+    const fetchStarterCode = async () => {
+      try {
+        const res = await fetch(`http://127.0.0.1:5000/api/starter?problem_id=${id}&language=${language}`)
+        const data = await res.json()
+        if (data.code) setCode(data.code)
+      } catch (error) {
+        console.error('Failed to fetch starter code:', error)
+      }
+    }
+
+    if (id && language) {
+      fetchStarterCode()
+    }
+  }, [id, language])
+
   const handleGoBack = () => {
     navigate('/dashboard')
+  }
+
+  const handleRunCode = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language,
+          code,
+          problem_id: id
+        }),
+      })
+
+      const data = await response.json()
+      setResults(data.results)
+    } catch (error) {
+      console.error('Error executing code:', error)
+    }
   }
 
   if (!problem) return <div className="problem-container">Loading...</div>
@@ -58,9 +95,7 @@ function ProblemPage() {
       <div className="right-section">
         <div className="top-bar">
           <h1>AI Interview</h1>
-          <button className="go-back-btn" onClick={handleGoBack}>
-            Go Back
-          </button>
+          <button className="go-back-btn" onClick={handleGoBack}>Go Back</button>
         </div>
 
         <div className="editor-header">
@@ -79,14 +114,14 @@ function ProblemPage() {
           </div>
 
           <div className="action-buttons">
-            <button className="run-btn">RUN</button>
+            <button className="run-btn" onClick={handleRunCode}>RUN</button>
             <button className="submit-btn">SUBMIT</button>
             <button className="leave-btn">LEAVE</button>
           </div>
         </div>
 
         <CodeEditor language={language} code={code} setCode={setCode} />
-        <TestCase testCases={testCases} />
+        <TestCase testCases={testCases} results={results} />
       </div>
     </div>
   )
