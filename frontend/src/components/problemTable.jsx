@@ -1,19 +1,17 @@
 // src/components/ProblemTable.jsx
-import '../css/problemTable.css'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import '../css/problemTable.css'
 
 export default function ProblemTable() {
-  const problems = [
-    { id: 1, title: 'Two Sum', difficulty: 'Easy' },
-    { id: 2, title: 'Valid Parentheses', difficulty: 'Easy' },
-    { id: 3, title: 'Merge Two Sorted Lists', difficulty: 'Easy' },
-    { id: 4, title: 'Best Time to Buy and Sell Stock', difficulty: 'Easy' },
-    { id: 5, title: 'Valid Palindrome', difficulty: 'Easy' },
-    { id: 6, title: 'Invert Binary Tree', difficulty: 'Easy' },
-    { id: 7, title: 'Balanced Binary Tree', difficulty: 'Easy' },
-    { id: 8, title: 'Linked List Cycle', difficulty: 'Medium' },
-    { id: 9, title: 'Lowest Common Ancestor of a Binary Search Tree', difficulty: 'Medium' },
-  ]
+  const [problems, setProblems] = useState([])
+
+  useEffect(() => {
+    fetch('http://127.0.0.1:5000/api/problems')
+      .then((res) => res.json())
+      .then((data) => setProblems(data))
+      .catch((err) => console.error('Error fetching problems:', err))
+  }, [])
 
   return (
     <div className="problem-table">
@@ -47,5 +45,5 @@ export default function ProblemTable() {
         </tbody>
       </table>
     </div>
-  )  
+  )
 }

@@ -1,38 +1,57 @@
+// src/pages/ProblemPage.jsx
 import { useParams, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ChatBox from './../../components/ChatBox.jsx'
 import CodeEditor from './../../components/CodeEditor.jsx'
 import './../../css/problemPage.css'
-import TestCase from './../../components/TestCase'
-
-const dummyProblem = {
-  id: 1,
-  title: 'Longest Substring Without Repeating Characters',
-  description:
-    'Given a string s, find the length of the longest substring without repeating characters.',
-  example: `Input: s = "abcabcbb"\nOutput: 3`,
-}
+import TestCase from './../../components/TestCase.jsx'
 
 const languages = ['python', 'javascript', 'cpp', 'java', 'c']
 
 function ProblemPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
+
   const [language, setLanguage] = useState('python')
   const [code, setCode] = useState('')
   const [chat, setChat] = useState('Hello, I’ll be conducting your coding interview today.')
-  const navigate = useNavigate()
+  const [problem, setProblem] = useState(null)
+  const [testCases, setTestCases] = useState([])
+
+  useEffect(() => {
+    const fetchProblem = async () => {
+      try {
+        const res = await fetch(`http://127.0.0.1:5000/api/problems/${id}`)
+        const data = await res.json()
+
+        setProblem(data.problem)
+        setTestCases(data.test_cases)
+      } catch (error) {
+        console.error('Failed to fetch problem:', error)
+      }
+    }
+
+    fetchProblem()
+  }, [id])
 
   const handleGoBack = () => {
     navigate('/dashboard')
   }
+
+  if (!problem) return <div className="problem-container">Loading...</div>
+
   return (
     <div className="problem-container">
       <div className="left-section">
-        <h1>{dummyProblem.title}</h1>
+        <h1>{problem.title}</h1>
         <h2>Description:</h2>
-        <p>{dummyProblem.description}</p>
-        <h2>Example</h2>
-        <pre>{dummyProblem.example}</pre>
+        <p>{problem.description}</p>
+        {problem.example && (
+          <>
+            <h2>Example</h2>
+            <pre>{problem.example}</pre>
+          </>
+        )}
         <ChatBox chat={chat} />
       </div>
 
@@ -67,7 +86,7 @@ function ProblemPage() {
         </div>
 
         <CodeEditor language={language} code={code} setCode={setCode} />
-        <TestCase />
+        <TestCase testCases={testCases} />
       </div>
     </div>
   )

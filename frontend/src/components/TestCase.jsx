@@ -1,27 +1,10 @@
 // src/components/TestCase.jsx
 import { useState } from 'react'
 import '../css/TestCase.css'
-
-const testCases = [
-  {
-    input: 's = "abcabcbb"',
-    output: '3',
-    expected: '3',
-  },
-  {
-    input: 's = "bbbbb"',
-    output: '1',
-    expected: '1',
-  },
-  {
-    input: 's = "pwwkew"',
-    output: '3',
-    expected: '3',
-  },
-]
-
-function TestCase() {
+function TestCase({ testCases }) {
   const [selectedIndex, setSelectedIndex] = useState(0)
+
+  if (!testCases.length) return <div>No test cases available.</div>
 
   return (
     <div className="test-case-container">
@@ -38,13 +21,13 @@ function TestCase() {
             </button>
           ))}
         </div>
-        <span className="status-msg">{testCases.length}/3 Test Cases Passed</span>
+        <span className="status-msg">{testCases.length}/10 Test Cases</span>
       </div>
 
       <div className="test-case-content">
-        <p>Input:{testCases[selectedIndex].input}</p>
-        <p>Your Output: {testCases[selectedIndex].output}</p>
-        <p>Expected Output: {testCases[selectedIndex].expected}</p>
+        <p>Input: {testCases[selectedIndex].input}</p>
+        <p>Your Output: -</p>
+        <p>Expected Output: {testCases[selectedIndex].expected_output}</p>
       </div>
     </div>
   )
