@@ -1,4 +1,5 @@
 # app/controllers/problem_controller.py
+
 from flask import Blueprint, jsonify
 from app.models.problem import Problem
 from app.models.test_cases import TestCase
@@ -6,6 +7,22 @@ from app.extensions import db
 
 problem_bp = Blueprint('problem_bp', __name__)
 
+# ✅ Route to fetch all problems
+@problem_bp.route('/api/problems', methods=['GET'])
+def get_all_problems():
+    problems = Problem.query.all()
+    problem_list = [
+        {
+            "id": p.id,
+            "title": p.title,
+            "difficulty": p.difficulty,
+            "category": p.category
+        }
+        for p in problems
+    ]
+    return jsonify(problem_list)
+
+# ✅ Route to fetch a problem by ID with its test cases
 @problem_bp.route('/api/problems/<int:problem_id>', methods=['GET'])
 def get_problem_by_id(problem_id):
     problem = Problem.query.get(problem_id)
