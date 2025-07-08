@@ -17,7 +17,11 @@ def get_java_class_and_method(code):
     return class_name, method_name
 
 def get_cpp_function_name(code):
-    match = re.search(r'\w+\s+(\w+)\s*\(', code)
+    match = re.search(r'(?:vector|int|float|double|string)\s*<*\w*>*\s+(\w+)\s*\(', code)
+    return match.group(1) if match else 'solution'
+
+def get_js_function_name(code):
+    match = re.search(r'function\s+(\w+)\s*\(', code)
     return match.group(1) if match else 'solution'
 
 def convert_args(language, input_dict):
@@ -26,20 +30,16 @@ def convert_args(language, input_dict):
 
     if language == 'java':
         return f"new int[]{{{', '.join(map(str, nums))}}}, {target}"
-
     elif language == 'cpp':
         return f"vector<int>{{{', '.join(map(str, nums))}}}, {target}"
-
     elif language == 'c':
         return {
             "nums": "{" + ", ".join(map(str, nums)) + "}",
             "len": str(len(nums)),
             "target": str(target)
         }
-
     elif language == 'javascript':
         return f"{json.dumps(nums)}, {target}"
-
     else:
         return ', '.join(json.dumps(v) for v in input_dict.values())
 
@@ -128,7 +128,7 @@ def execute_code(language, code, test_input):
             code = wrapper
 
         elif language == 'javascript':
-            func_name = get_cpp_function_name(code)
+            func_name = get_js_function_name(code)
             code += f"\nconsole.log(JSON.stringify({func_name}({input_args})));"
 
         with open(code_file, 'w') as f:
