@@ -1,0 +1,29 @@
+{
+    "language" : "cpp",
+    "problem_id" : 1,
+    "code" : "#include <vector>\n#include <unordered_map>\nusing namespace std;\n\nvector<int> twoSum(vector<int> nums, int target) {\n    unordered_map<int, int> m;\n    for (int i = 0; i < nums.size(); ++i) {\n        int diff = target - nums[i];\n        if (m.count(diff)) {\n            return {m[diff], i};\n        }\n        m[nums[i]] = i;\n    }\n    return {};\n}"
+}
+
+{
+    "language" : "java",
+    "problem_id" : 1,
+    "code" : "import java.util.*;\n\nclass Solution {\n    public int[] twoSum(int[] nums, int target) {\n        Map<Integer, Integer> map = new HashMap<>();\n        for (int i = 0; i < nums.length; i++) {\n            int diff = target - nums[i];\n            if (map.containsKey(diff)) {\n                return new int[]{map.get(diff), i};\n            }\n            map.put(nums[i], i);\n        }\n        return new int[]{};\n    }\n}"
+}
+
+{
+    "language" : "python",
+    "problem_id" : 1,
+    "code" : "class Solution:\n    def twoSum(self, nums, target):\n        hashmap = {}\n        for i, num in enumerate(nums):\n            diff = target - num\n            if diff in hashmap:\n                return [hashmap[diff], i]\n            hashmap[num] = i"
+}
+
+{
+    "language" : "javascript",
+    "problem_id" : 1,
+    "code" : "function twoSum(nums, target) {\n    const map = new Map();\n    for (let i = 0; i < nums.length; i++) {\n        const diff = target - nums[i];\n        if (map.has(diff)) {\n            return [map.get(diff), i];\n        }\n        map.set(nums[i], i);\n    }\n    return [];\n}"
+}
+
+{
+    "language" : "c",
+    "problem_id" : 1,
+    "code" : "#include <stdio.h>\n\nint main() {\n    int nums[] = {2, 7, 11, 15};\n    int len = 4;\n    int target = 9;\n    for (int i = 0; i < len; i++) {\n        for (int j = i + 1; j < len; j++) {\n            if (nums[i] + nums[j] == target) {\n                printf(\"[%d, %d]\\n\", i, j);\n                return 0;\n            }\n        }\n    }\n    printf(\"[]\\n\");\n    return 0;\n}"
+}
