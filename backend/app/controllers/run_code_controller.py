@@ -3,6 +3,7 @@ from app.models.test_cases import TestCase
 from app.services.code_executor import execute_code
 from app.utils.validators import deep_equal
 import ast
+import json
 
 run_code_bp = Blueprint("run_code_bp", __name__)
 
@@ -34,11 +35,20 @@ def run_code():
         parsed_output = parse_output(raw_output)
         parsed_expected = parse_output(expected_output)
 
-        # Normalize tuple vs list
         if isinstance(parsed_output, tuple):
             parsed_output = list(parsed_output)
         if isinstance(parsed_expected, tuple):
             parsed_expected = list(parsed_expected)
+
+        # Normalize [1,0] vs [0,1] if unordered but values match
+        if (
+            isinstance(parsed_output, list)
+            and isinstance(parsed_expected, list)
+            and all(isinstance(x, int) for x in parsed_output + parsed_expected)
+            and set(parsed_output) == set(parsed_expected)
+        ):
+            parsed_output = sorted(parsed_output)
+            parsed_expected = sorted(parsed_expected)
 
         passed = deep_equal(parsed_output, parsed_expected)
 
@@ -48,7 +58,7 @@ def run_code():
         results.append({
             "input": tc.input,
             "expected_output": expected_output,
-            "output": raw_output,
+            "output": json.dumps(parsed_output),  # Display cleanly in frontend
             "error": result.get("error", ""),
             "passed": passed
         })

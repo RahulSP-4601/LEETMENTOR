@@ -9,6 +9,25 @@ export default function TestCase({ testCases, results }) {
 
   const currentResult = results?.[selectedIndex]
 
+  function normalizeOutput(str) {
+    try {
+      // Try normal JSON parse after fixing single quotes
+      return JSON.stringify(JSON.parse(str.replace(/'/g, '"')))
+    } catch {
+      // Try handling tuple-style output like (1, 0)
+      const tupleRegex = /^\(\s*\d+(,\s*\d+)*\s*\)$/
+      if (tupleRegex.test(str)) {
+        try {
+          const converted = str.replace(/^\(/, '[').replace(/\)$/, ']')
+          return JSON.stringify(JSON.parse(converted))
+        } catch {
+          return str
+        }
+      }
+      return str
+    }
+  }
+
   return (
     <div className="test-case-container">
       <div className="test-case-header">
@@ -29,7 +48,7 @@ export default function TestCase({ testCases, results }) {
 
       <div className="test-case-content">
         <p>Input: {testCases[selectedIndex].input}</p>
-        <p>Your Output: {currentResult ? currentResult.output : '-'}</p>
+        <p>Your Output: {currentResult ? normalizeOutput(currentResult.output) : '-'}</p>
         <p>Expected Output: {testCases[selectedIndex].expected_output}</p>
         {currentResult && (
           <p style={{ color: currentResult.passed ? 'lime' : 'red' }}>

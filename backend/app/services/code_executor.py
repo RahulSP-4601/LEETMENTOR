@@ -40,31 +40,31 @@ def execute_code(language, code, test_input):
 
         try:
             input_dict = json.loads(test_input)
-            input_args = ", ".join([repr(v) if not isinstance(v, str) else f'"{v}"' for v in input_dict.values()])
+            args_list = list(input_dict.values())
+            input_args = ', '.join(json.dumps(arg) for arg in args_list)
         except Exception as e:
             return {"error": f"Failed to parse test input: {str(e)}"}
 
-        # Append invocation logic to code
+        # Append invocation logic to user code
         if language == 'python':
             func_name = get_python_function_name(code)
-            invocation = f"\n\nif __name__ == '__main__':\n    print(Solution().{func_name}({input_args}))\n"
-            code += invocation
+            code += f"\n\nif __name__ == '__main__':\n    print(Solution().{func_name}({input_args}))\n"
 
         elif language == 'java':
             class_name, method_name = get_java_class_and_method(code)
-            invocation = (
+            wrapper = (
                 f"\npublic class Main {{\n"
                 f"    public static void main(String[] args) {{\n"
                 f"        {class_name} obj = new {class_name}();\n"
                 f"        System.out.println(java.util.Arrays.toString(obj.{method_name}({input_args})));\n"
                 f"    }}\n}}"
             )
-            code += "\n" + invocation
+            code += "\n" + wrapper
 
         elif language == 'cpp':
             func_name = get_cpp_function_name(code)
-            invocation = (
-                f"\n#include <iostream>\nusing namespace std;\n"
+            code += (
+                f"\n#include <iostream>\n#include <vector>\nusing namespace std;\n"
                 f"int main() {{\n"
                 f"    auto result = {func_name}({input_args});\n"
                 f"    cout << \"[\";\n"
@@ -75,15 +75,14 @@ def execute_code(language, code, test_input):
                 f"    cout << \"]\" << endl;\n"
                 f"    return 0;\n}}"
             )
-            code += "\n" + invocation
 
         elif language == 'c':
-            # C requires more boilerplate, assume user prints internally for now
+            # Expect user to handle input/output in code
             pass
 
         elif language == 'javascript':
-            invocation = f"\nconsole.log({get_cpp_function_name(code)}({input_args}));"
-            code += invocation
+            func_name = get_cpp_function_name(code)
+            code += f"\nconsole.log(JSON.stringify({func_name}({input_args})));"
 
         with open(code_file, 'w') as f:
             f.write(code)
@@ -91,26 +90,24 @@ def execute_code(language, code, test_input):
         if language == 'python':
             run_cmd = ['python3', code_file]
         elif language == 'cpp':
-            executable = os.path.join(tmpdir, 'a.out')
-            result = subprocess.run(['g++', code_file, '-o', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            if result.returncode != 0:
-                return {"error": result.stderr}
-            run_cmd = [executable]
+            exe = os.path.join(tmpdir, 'a.out')
+            compile = subprocess.run(['g++', code_file, '-o', exe], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if compile.returncode != 0:
+                return {"error": compile.stderr}
+            run_cmd = [exe]
         elif language == 'c':
-            executable = os.path.join(tmpdir, 'a.out')
-            result = subprocess.run(['gcc', code_file, '-o', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            if result.returncode != 0:
-                return {"error": result.stderr}
-            run_cmd = [executable]
+            exe = os.path.join(tmpdir, 'a.out')
+            compile = subprocess.run(['gcc', code_file, '-o', exe], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if compile.returncode != 0:
+                return {"error": compile.stderr}
+            run_cmd = [exe]
         elif language == 'java':
-            compile_result = subprocess.run(['javac', code_file], cwd=tmpdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            if compile_result.returncode != 0:
-                return {"error": compile_result.stderr}
+            compile = subprocess.run(['javac', code_file], cwd=tmpdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if compile.returncode != 0:
+                return {"error": compile.stderr}
             run_cmd = ['java', '-cp', tmpdir, 'Main']
         elif language == 'javascript':
             run_cmd = ['node', code_file]
-        else:
-            return {"error": f"{language} support not implemented"}
 
         try:
             result = subprocess.run(run_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=5, text=True)
