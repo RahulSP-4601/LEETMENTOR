@@ -89,7 +89,7 @@ function ProblemPage() {
             <pre>{problem.example}</pre>
           </>
         )}
-        <ChatBox chat={chat} />
+        <ChatBox chat={chat} setChat={setChat}/>
       </div>
 
       <div className="right-section">

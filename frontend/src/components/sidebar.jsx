@@ -11,7 +11,7 @@ export default function Sidebar() {
 
   const handleLogout = async () => {
     try {
-      await fetch("http://127.0.0.1:5000/api/logout", {
+      await fetch("http://127.0.0.1:5000/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -26,7 +26,12 @@ export default function Sidebar() {
     }
   }
 
-  const menuItems = ['Problems', 'AI Tutor', 'AI Interviewer']
+  // Define menu items with their paths
+  const menuItems = [
+    { name: 'Problems', path: '/dashboard' },
+    { name: 'AI Tutor', path: '/ai-tutor/1' },        // Use dynamic problem ID later
+    { name: 'AI Interviewer', path: '/ai-interview/1' }
+  ]
 
   return (
     <div className="sidebar">
@@ -34,11 +39,14 @@ export default function Sidebar() {
       <ul className="nav-items">
         {menuItems.map((item) => (
           <li
-            key={item}
-            className={activeItem === item ? 'active' : ''}
-            onClick={() => setActiveItem(item)}
+            key={item.name}
+            className={activeItem === item.name ? 'active' : ''}
+            onClick={() => {
+              setActiveItem(item.name)
+              navigate(item.path)
+            }}
           >
-            {item}
+            {item.name}
           </li>
         ))}
       </ul>
