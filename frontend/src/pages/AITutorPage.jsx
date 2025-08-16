@@ -1,5 +1,7 @@
+// src/pages/AITutorPage.jsx
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
+import Split from "react-split";
 import CodeEditor from "./../components/CodeEditor.jsx";
 import "./../css/problemPage.css";
 import TestCase from "./../components/TestCase.jsx";
@@ -170,79 +172,111 @@ function AITutorPage() {
 
   return (
     <div className="problem-container">
-      <div className="left-section">
-        <h1>{problem.title} (AI Tutor)</h1>
-        <div className="chat-box-container">
-          {chat.map((msg, idx) => (
-            <div key={idx} className={`chat-msg ${msg.role}`}>
-              <ReactMarkdown>{msg.text}</ReactMarkdown>
-            </div>
-          ))}
+      {/* OUTER SPLIT: Left (AI tutor) | Right (Editor + Tests) */}
+      <Split
+        className="outer-split"
+        sizes={[33, 67]}
+        minSize={[240, 360]}
+        gutterSize={8}
+        direction="horizontal"
+        cursor="col-resize"
+      >
+        {/* LEFT SECTION */}
+        <div className="left-section">
+          <h1>{problem.title} (AI Tutor)</h1>
 
-          {awaitingCodeConfirm && (
-            <div className="button-row">
-              <button onClick={() => handleCodeConfirm(true)}>Yes</button>
-              <button onClick={() => handleCodeConfirm(false)}>No</button>
-            </div>
-          )}
+          <div className="chat-box-container">
+            {chat.map((msg, idx) => (
+              <div key={idx} className={`chat-msg ${msg.role}`}>
+                <ReactMarkdown>{msg.text}</ReactMarkdown>
+              </div>
+            ))}
 
-          {awaitingLangSelect && (
-            <div className="button-row">
-              {languages.map((lang) => (
-                <button key={lang} onClick={() => requestCode(lang)}>
-                  {lang.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+            {awaitingCodeConfirm && (
+              <div className="button-row">
+                <button onClick={() => handleCodeConfirm(true)}>Yes</button>
+                <button onClick={() => handleCodeConfirm(false)}>No</button>
+              </div>
+            )}
 
-        <div className="chat-input-row">
-          <input
-            className="chat-input"
-            placeholder="Ask the AI Tutor..."
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && askAI(userInput)}
-          />
-          <button className="mic-button" onClick={() => askAI(userInput)}>
-            Send
-          </button>
-        </div>
-      </div>
-
-      <div className="right-section">
-        <div className="top-bar">
-          <h1>AI Tutor Mode</h1>
-          <button className="go-back-btn" onClick={handleGoBack}>
-            Go Back
-          </button>
-        </div>
-        <div className="editor-header">
-          <div className="editor-controls">
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="language-select"
-            >
-              {languages.map((lang) => (
-                <option key={lang} value={lang}>
-                  {lang.toUpperCase()}
-                </option>
-              ))}
-            </select>
+            {awaitingLangSelect && (
+              <div className="button-row">
+                {languages.map((lang) => (
+                  <button key={lang} onClick={() => requestCode(lang)}>
+                    {lang.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="action-buttons">
-            <button className="run-btn" onClick={handleRunCode}>
-              RUN
+
+          <div className="chat-input-row">
+            <input
+              className="chat-input"
+              placeholder="Ask the AI Tutor..."
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && askAI(userInput)}
+            />
+            <button className="mic-button" onClick={() => askAI(userInput)}>
+              Send
             </button>
-            <button className="submit-btn">SUBMIT</button>
-            <button className="leave-btn">LEAVE</button>
           </div>
         </div>
-        <CodeEditor language={language} code={code} setCode={setCode} />
-        <TestCase testCases={testCases} results={results} />
-      </div>
+
+        {/* RIGHT SIDE: INNER SPLIT (Editor on top, Test Cases bottom) */}
+        <Split
+          className="right-split"
+          sizes={[60, 40]}
+          minSize={[200, 160]}
+          gutterSize={8}
+          direction="vertical"
+          cursor="row-resize"
+        >
+          {/* TOP: Editor */}
+          <div className="right-section editor-pane">
+            <div className="top-bar">
+              <h1>AI Tutor Mode</h1>
+              <button className="go-back-btn" onClick={handleGoBack}>
+                Go Back
+              </button>
+            </div>
+
+            <div className="editor-header">
+              <div className="editor-controls">
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="language-select"
+                >
+                  {languages.map((lang) => (
+                    <option key={lang} value={lang}>
+                      {lang.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="action-buttons">
+                <button className="run-btn" onClick={handleRunCode}>
+                  RUN
+                </button>
+                <button className="submit-btn">SUBMIT</button>
+                <button className="leave-btn">LEAVE</button>
+              </div>
+            </div>
+
+            {/* Fill remaining height with Monaco */}
+            <div className="editor-fill">
+              <CodeEditor language={language} code={code} setCode={setCode} />
+            </div>
+          </div>
+
+          {/* BOTTOM: Test cases */}
+          <div className="right-section tests-pane">
+            <TestCase testCases={testCases} results={results} />
+          </div>
+        </Split>
+      </Split>
     </div>
   );
 }

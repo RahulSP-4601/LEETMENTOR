@@ -1,10 +1,8 @@
+/* src/css/CodeEditor.css */
 .editor-container {
-  flex: 1;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  height: 100%;
 }
-
-.monaco-editor {
-  overflow: auto !important; /* Force scrolling inside editor */
+.monaco-editor,
+.monaco-scrollable-element {
+  height: 100% !important;
 }

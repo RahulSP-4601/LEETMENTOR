@@ -5,7 +5,8 @@
   font-family: "Segoe UI", sans-serif;
   font-size: 22px;
   border-top: 3px solid #fff;
-  height: 260px;
+  height: 100%;
+  overflow: auto;
 }
 
 .test-case-header {
