@@ -6,7 +6,7 @@ export default function CodeEditor({ language, code, setCode }) {
   return (
     <div className="editor-container">
       <Editor
-        height="550px"
+        height="100%"  // let container decide
         language={language}
         theme="vs-dark"
         value={code}
