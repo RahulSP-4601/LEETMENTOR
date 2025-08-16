@@ -1,36 +1,42 @@
-// src/components/sidebar.jsx
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import '../css/sidebar.css'
 
 export default function Sidebar() {
-  const [activeItem, setActiveItem] = useState('Problems')
   const { logout, token } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // keep active state in sync with URL
+  const current = location.pathname.startsWith('/ai-tutor')
+    ? 'AI Tutor'
+    : location.pathname.startsWith('/ai-interview')
+    ? 'AI Interviewer'
+    : 'Problems'
+
+  const [activeItem, setActiveItem] = useState(current)
 
   const handleLogout = async () => {
     try {
-      await fetch("http://127.0.0.1:5000/logout", {
-        method: "POST",
+      await fetch('http://127.0.0.1:5000/logout', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        }
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       })
-
       logout()
-      navigate("/get-started")
+      navigate('/get-started')
     } catch (err) {
-      console.error("Logout failed", err)
+      console.error('Logout failed', err)
     }
   }
 
-  // Define menu items with their paths
   const menuItems = [
-    { name: 'Problems', path: '/dashboard' },
-    { name: 'AI Tutor', path: '/ai-tutor/1' },        // Use dynamic problem ID later
-    { name: 'AI Interviewer', path: '/ai-interview/1' }
+    { name: 'Problems', path: '/dashboard' },   // normal practice
+    { name: 'AI Tutor', path: '/ai-tutor' },    // list view first
+    { name: 'AI Interviewer', path: '/ai-interview' }, // list view first
   ]
 
   return (

@@ -1,17 +1,18 @@
+/* Sidebar + content shell */
 .dashboard-container {
   display: flex;
+  align-items: stretch;
+  width: 100vw;
   height: 100vh;
-  background-color: #0f172a;
-  color: #f1f5f9;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  overflow: hidden;
+  background: #0f172a; /* matches your theme */
 }
 
-.main-content {
-  flex: 1;
-  padding: 40px;
-  background-color: #0f172a;
-  overflow-y: auto;
+/* Main content area to the right of the sidebar */
+.dashboard-content {
+  flex: 1; /* take all remaining width */
+  min-width: 0; /* critical for flex overflow */
+  overflow: auto; /* scroll content if needed */
+  padding: 32px 40px;
 }
 
 .main-content h1 {

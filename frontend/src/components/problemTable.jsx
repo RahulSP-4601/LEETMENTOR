@@ -1,9 +1,15 @@
-// src/components/ProblemTable.jsx
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import '../css/problemTable.css'
 
-export default function ProblemTable() {
+/**
+ * basePath controls where each problem row links to.
+ * Examples:
+ *  - "/problems"      -> normal practice
+ *  - "/ai-tutor"      -> AI Tutor flow
+ *  - "/ai-interview"  -> AI Interviewer flow
+ */
+export default function ProblemTable({ basePath = '/problems', title = 'AI-Powered Coding Practice' }) {
   const [problems, setProblems] = useState([])
 
   useEffect(() => {
@@ -15,9 +21,7 @@ export default function ProblemTable() {
 
   return (
     <div className="problem-table">
-      <h1>AI-Powered Coding Practice</h1>
-      <button className="start-practice-btn">Start Practice</button>
-      <h2>Problems</h2>
+      <h1>{title}</h1>
       <table>
         <thead>
           <tr>
@@ -31,7 +35,7 @@ export default function ProblemTable() {
             <tr key={problem.id}>
               <td>{problem.id}</td>
               <td>
-                <Link to={`/problems/${problem.id}`} className="problem-link">
+                <Link to={`${basePath}/${problem.id}`} className="problem-link">
                   {problem.title}
                 </Link>
               </td>
