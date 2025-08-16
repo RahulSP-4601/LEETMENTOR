@@ -88,41 +88,39 @@ function AITutorPage() {
   const askAI = async (question, problemDesc = problem?.description, isAuto = false) => {
     if (!isAuto && !question.trim()) return;
 
-    // Only add user input if manual
     if (!isAuto) {
       setUserInput("");
       setChat((prev) => [...prev, { role: "user", text: question }]);
     }
+
+    const mode = isAuto ? "explain" : "qa";          // <-- key change
 
     try {
       const res = await fetch("http://127.0.0.1:5000/api/ai-tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mode: "explain",
-          question,
+          mode,
+          question,               // filled for QA, harmless for explain
           problem: problemDesc
         })
       });
       const data = await res.json();
 
-      // Prevent duplicate answers
       setChat((prev) => {
-        if (prev.some((msg) => msg.text === data.answer)) return prev;
+        if (prev.some((m) => m.text === data.answer)) return prev;
         return [...prev, { role: "ai", text: data.answer }];
       });
 
-      if (data.answer.includes("Would you like me to provide the code?")) {
+      if (mode === "explain" && data.answer.includes("Would you like me to provide the code?")) {
         setAwaitingCodeConfirm(true);
       }
     } catch (error) {
       console.error("Failed to get AI response:", error);
-      setChat((prev) => [
-        ...prev,
-        { role: "ai", text: "⚠️ Sorry, I could not process your request." }
-      ]);
+      setChat((prev) => [...prev, { role: "ai", text: "⚠️ Sorry, I could not process your request." }]);
     }
   };
+
 
   const handleCodeConfirm = (yes) => {
     setAwaitingCodeConfirm(false);
