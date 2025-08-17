@@ -13,7 +13,7 @@ def create_app():
     app.config.from_object(Config)
     CORS(app, origins=["http://localhost:5173"], supports_credentials=True, allow_headers=["Content-Type", "Authorization"])
     db.init_app(app)
-    app.register_blueprint(auth_bp, url_prefix='/api')
+    app.register_blueprint(auth_bp)
     jwt.init_app(app)
 
     register_routes(app)  # ✅ This already includes problem_bp
