@@ -6,7 +6,7 @@ from app.models.starter_code import StarterCode
 
 starter_bp = Blueprint('starter_bp', __name__)
 
-@starter_bp.route('/api/starter', methods=['GET'])
+@starter_bp.route('/starter', methods=['GET'])
 def get_starter_code():
     problem_id = request.args.get('problem_id')
     language = request.args.get('language')

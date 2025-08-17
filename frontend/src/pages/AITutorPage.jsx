@@ -1,172 +1,255 @@
 // src/pages/AITutorPage.jsx
-import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
-import Split from "react-split";
-import CodeEditor from "./../components/CodeEditor.jsx";
-import "./../css/problemPage.css";
-import TestCase from "./../components/TestCase.jsx";
-import ReactMarkdown from "react-markdown";
+import { useParams, useNavigate } from "react-router-dom"
+import { useState, useEffect, useMemo, useRef } from "react"
+import Split from "react-split"
+import CodeEditor from "./../components/CodeEditor.jsx"
+import "./../css/problemPage.css"
+import TestCase from "./../components/TestCase.jsx"
+import ReactMarkdown from "react-markdown"
 
-const languages = ["python", "javascript", "cpp", "java", "c"];
+const languages = ["python", "javascript", "cpp", "java", "c"]
 
 function AITutorPage() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id } = useParams()
+  const navigate = useNavigate()
 
-  const [language, setLanguage] = useState("python");
-  const [code, setCode] = useState("");
+  const numericId = useMemo(() => {
+    const n = Number(id)
+    return Number.isFinite(n) ? n : null
+  }, [id])
+
+  const [language, setLanguage] = useState("python")
+  const [code, setCode] = useState("")
   const [chat, setChat] = useState([
-    {
-      role: "ai",
-      text: "👋 Hi! I am your AI Tutor. I will guide you step-by-step for this problem."
-    }
-  ]);
-  const [userInput, setUserInput] = useState("");
-  const [problem, setProblem] = useState(null);
-  const [testCases, setTestCases] = useState([]);
-  const [results, setResults] = useState([]);
-  const [awaitingCodeConfirm, setAwaitingCodeConfirm] = useState(false);
-  const [awaitingLangSelect, setAwaitingLangSelect] = useState(false);
+    { role: "ai", text: "👋 Hi! I am your AI Tutor. I will guide you step-by-step for this problem." },
+  ])
+  const [userInput, setUserInput] = useState("")
+  const [problem, setProblem] = useState(null)
+  const [testCases, setTestCases] = useState([])
+  const [results, setResults] = useState([])
+  const [awaitingCodeConfirm, setAwaitingCodeConfirm] = useState(false)
+  const [awaitingLangSelect, setAwaitingLangSelect] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [starterLoading, setStarterLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   // Prevent double trigger of askAI on load
-  const alreadyAskedRef = useRef(false);
+  const alreadyAskedRef = useRef(false)
 
-  // Load problem and ask AI only once
+  // Load problem and (once) ask AI to explain
   useEffect(() => {
-    const fetchProblem = async () => {
-      try {
-        const res = await fetch(`http://127.0.0.1:5000/api/problems/${id}`);
-        const data = await res.json();
-        setProblem(data.problem);
-        setTestCases(data.test_cases);
+    if (!numericId) {
+      setError("Invalid problem id")
+      setLoading(false)
+      return
+    }
 
-        if (!alreadyAskedRef.current) {
-          alreadyAskedRef.current = true;
-          askAI("Explain the solution step by step.", data.problem.description, true);
+    let cancelled = false
+    const run = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const res = await fetch(`/api/problems/${numericId}`, {
+          credentials: "include",
+        })
+        if (!res.ok) {
+          throw new Error(`Failed to load problem (${res.status})`)
         }
-      } catch (error) {
-        console.error("Failed to fetch problem:", error);
-      }
-    };
-    fetchProblem();
-  }, [id]);
+        const data = await res.json()
+        if (!cancelled) {
+          setProblem(data.problem)
+          setTestCases(data.test_cases || [])
 
-  // Fetch starter code
+          // Ask the AI tutor only once after we have the problem
+          if (!alreadyAskedRef.current && data.problem?.description) {
+            alreadyAskedRef.current = true
+            askAI("Explain the solution step by step.", data.problem.description, true)
+          }
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.message || "Failed to fetch problem")
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [numericId])
+
+  // Fetch starter code for selected language
   useEffect(() => {
-    const fetchStarterCode = async () => {
+    if (!numericId || !language) return
+
+    let cancelled = false
+    const run = async () => {
       try {
-        const res = await fetch(
-          `http://127.0.0.1:5000/api/starter?problem_id=${id}&language=${language}`
-        );
-        const data = await res.json();
-        if (data.code) setCode(data.code);
-      } catch (error) {
-        console.error("Failed to fetch starter code:", error);
+        setStarterLoading(true)
+        const qs = new URLSearchParams({
+          problem_id: String(numericId),
+          language,
+        })
+        const res = await fetch(`/api/starter?${qs.toString()}`, {
+          credentials: "include",
+        })
+        if (!res.ok) {
+          console.warn("Starter fetch not OK:", res.status)
+          return
+        }
+        const data = await res.json()
+        const starter = data.starter ?? data.code ?? ""
+        if (!cancelled) setCode(starter)
+      } catch (err) {
+        console.error("Failed to fetch starter code:", err)
+      } finally {
+        if (!cancelled) setStarterLoading(false)
       }
-    };
+    }
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [numericId, language])
 
-    if (id && language) fetchStarterCode();
-  }, [id, language]);
-
-  const handleGoBack = () => navigate("/dashboard");
+  const handleGoBack = () => navigate("/dashboard")
 
   const handleRunCode = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/run", {
+      const response = await fetch("/api/run", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, code, problem_id: id })
-      });
-      const data = await response.json();
-      setResults(data.results);
+        body: JSON.stringify({ language, code, problem_id: numericId }),
+      })
+      if (!response.ok) {
+        const text = await response.text().catch(() => "")
+        throw new Error(`Run failed (${response.status})${text ? `: ${text}` : ""}`)
+      }
+      const data = await response.json()
+      setResults(data.results || [])
     } catch (error) {
-      console.error("Error executing code:", error);
+      console.error("Error executing code:", error)
     }
-  };
+  }
 
   // Ask AI
   const askAI = async (question, problemDesc = problem?.description, isAuto = false) => {
-    if (!isAuto && !question.trim()) return;
+    if (!isAuto && !question.trim()) return
 
     if (!isAuto) {
-      setUserInput("");
-      setChat((prev) => [...prev, { role: "user", text: question }]);
+      setUserInput("")
+      setChat((prev) => [...prev, { role: "user", text: question }])
     }
 
-    const mode = isAuto ? "explain" : "qa";          // <-- key change
+    const mode = isAuto ? "explain" : "qa"
 
     try {
-      const res = await fetch("http://127.0.0.1:5000/api/ai-tutor", {
+      const res = await fetch("/api/ai-tutor", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode,
-          question,               // filled for QA, harmless for explain
-          problem: problemDesc
-        })
-      });
-      const data = await res.json();
-
+          question,           // populated for qa; harmless for explain
+          problem: problemDesc,
+        }),
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(`AI tutor error (${res.status})${text ? `: ${text}` : ""}`)
+      }
+      const data = await res.json()
       setChat((prev) => {
-        if (prev.some((m) => m.text === data.answer)) return prev;
-        return [...prev, { role: "ai", text: data.answer }];
-      });
+        if (prev.some((m) => m.text === data.answer)) return prev
+        return [...prev, { role: "ai", text: data.answer }]
+      })
 
-      if (mode === "explain" && data.answer.includes("Would you like me to provide the code?")) {
-        setAwaitingCodeConfirm(true);
+      if (mode === "explain" && typeof data.answer === "string" && data.answer.includes("Would you like me to provide the code?")) {
+        setAwaitingCodeConfirm(true)
       }
     } catch (error) {
-      console.error("Failed to get AI response:", error);
-      setChat((prev) => [...prev, { role: "ai", text: "⚠️ Sorry, I could not process your request." }]);
+      console.error("Failed to get AI response:", error)
+      setChat((prev) => [...prev, { role: "ai", text: "⚠️ Sorry, I could not process your request." }])
     }
-  };
-
+  }
 
   const handleCodeConfirm = (yes) => {
-    setAwaitingCodeConfirm(false);
+    setAwaitingCodeConfirm(false)
     if (yes) {
-      setAwaitingLangSelect(true);
+      setAwaitingLangSelect(true)
       setChat((prev) => [
         ...prev,
-        { role: "ai", text: "Please select a language for the code implementation:" }
-      ]);
+        { role: "ai", text: "Please select a language for the code implementation:" },
+      ])
     } else {
       setChat((prev) => [
         ...prev,
-        { role: "ai", text: "Okay! Try solving it on your own first. 👍" }
-      ]);
+        { role: "ai", text: "Okay! Try solving it on your own first. 👍" },
+      ])
     }
-  };
+  }
 
   const requestCode = async (lang) => {
-    setAwaitingLangSelect(false);
-    setChat((prev) => [...prev, { role: "user", text: lang.toUpperCase() }]);
+    setAwaitingLangSelect(false)
+    setChat((prev) => [...prev, { role: "user", text: lang.toUpperCase() }])
 
     try {
-      const res = await fetch("http://127.0.0.1:5000/api/ai-tutor", {
+      const res = await fetch("/api/ai-tutor", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode: "code",
           language: lang,
-          problem: problem?.description
-        })
-      });
-      const data = await res.json();
-
+          problem: problem?.description,
+        }),
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(`AI code error (${res.status})${text ? `: ${text}` : ""}`)
+      }
+      const data = await res.json()
       setChat((prev) => [
         ...prev,
-        { role: "ai", text: `Here is the ${lang} code:\n\n${data.answer}` }
-      ]);
+        { role: "ai", text: `Here is the ${lang.toUpperCase()} code:\n\n${data.answer}` },
+      ])
     } catch (error) {
+      console.error("Failed to get AI code:", error)
       setChat((prev) => [
         ...prev,
-        { role: "ai", text: "⚠️ Could not fetch the code right now." }
-      ]);
+        { role: "ai", text: "⚠️ Could not fetch the code right now." },
+      ])
     }
-  };
+  }
 
-  if (!problem) return <div className="problem-container">Loading...</div>;
+  if (loading) {
+    return <div className="problem-container">Loading problem...</div>
+  }
+
+  if (error) {
+    return (
+      <div className="problem-container">
+        <h2>Unable to load problem</h2>
+        <p>{error}</p>
+        <button className="go-back-btn" onClick={handleGoBack}>
+          Go Back
+        </button>
+      </div>
+    )
+  }
+
+  if (!problem) {
+    return (
+      <div className="problem-container">
+        <h2>Problem not found</h2>
+        <button className="go-back-btn" onClick={handleGoBack}>
+          Go Back
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="problem-container">
@@ -255,11 +338,11 @@ function AITutorPage() {
                 </select>
               </div>
               <div className="action-buttons">
-                <button className="run-btn" onClick={handleRunCode}>
-                  RUN
+                <button className="run-btn" onClick={handleRunCode} disabled={starterLoading}>
+                  {starterLoading ? "LOADING..." : "RUN"}
                 </button>
                 <button className="submit-btn">SUBMIT</button>
-                <button className="leave-btn">LEAVE</button>
+                <button className="leave-btn" onClick={handleGoBack}>LEAVE</button>
               </div>
             </div>
 
@@ -276,7 +359,7 @@ function AITutorPage() {
         </Split>
       </Split>
     </div>
-  );
+  )
 }
 
-export default AITutorPage;
+export default AITutorPage

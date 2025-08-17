@@ -3,7 +3,7 @@ from app.services.ai_agent import run_agent
 
 ai_tutor_bp = Blueprint("ai_tutor_bp", __name__)
 
-@ai_tutor_bp.route("/api/ai-tutor", methods=["POST"])
+@ai_tutor_bp.route("/ai-tutor", methods=["POST"])
 def ai_tutor():
     data = request.get_json() or {}
     mode = data.get("mode", "explain")

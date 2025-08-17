@@ -1,5 +1,4 @@
 from flask import Flask
-from flask_cors import CORS
 from app.extensions import db
 from app.controllers.auth_controller import auth_bp
 from config import Config
@@ -11,11 +10,12 @@ jwt = JWTManager()
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    CORS(app, origins=["http://localhost:5173"], supports_credentials=True, allow_headers=["Content-Type", "Authorization"])
+
     db.init_app(app)
-    app.register_blueprint(auth_bp)
     jwt.init_app(app)
 
-    register_routes(app)  # ✅ This already includes problem_bp
+    # Mount under /api so the frontend can proxy to it
+    app.register_blueprint(auth_bp, url_prefix="/api")  # -> /api/login, /api/me, /api/logout
 
+    register_routes(app)
     return app

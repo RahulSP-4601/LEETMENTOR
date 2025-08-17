@@ -1,14 +1,14 @@
+// frontend/components/sidebar.jsx
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate, useLocation } from 'react-router-dom'
 import '../css/sidebar.css'
 
 export default function Sidebar() {
-  const { logout, token } = useAuth()
+  const { logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
-  // keep active state in sync with URL
   const current = location.pathname.startsWith('/ai-tutor')
     ? 'AI Tutor'
     : location.pathname.startsWith('/ai-interview')
@@ -19,14 +19,7 @@ export default function Sidebar() {
 
   const handleLogout = async () => {
     try {
-      await fetch('http://127.0.0.1:5000/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      logout()
+      await logout()                // server clears cookie
       navigate('/get-started')
     } catch (err) {
       console.error('Logout failed', err)
@@ -34,9 +27,9 @@ export default function Sidebar() {
   }
 
   const menuItems = [
-    { name: 'Problems', path: '/dashboard' },   // normal practice
-    { name: 'AI Tutor', path: '/ai-tutor' },    // list view first
-    { name: 'AI Interviewer', path: '/ai-interview' }, // list view first
+    { name: 'Problems', path: '/dashboard' },
+    { name: 'AI Tutor', path: '/ai-tutor' },
+    { name: 'AI Interviewer', path: '/ai-interview' },
   ]
 
   return (

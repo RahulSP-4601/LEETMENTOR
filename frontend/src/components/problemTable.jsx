@@ -13,7 +13,7 @@ export default function ProblemTable({ basePath = '/problems', title = 'AI-Power
   const [problems, setProblems] = useState([])
 
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/api/problems')
+    fetch('/api/problems', { credentials: 'include' })
       .then((res) => res.json())
       .then((data) => setProblems(data))
       .catch((err) => console.error('Error fetching problems:', err))

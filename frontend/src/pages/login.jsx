@@ -1,3 +1,4 @@
+// frontend/pages/login.jsx
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
@@ -11,22 +12,10 @@ function Login() {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:5000/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        login(data.access_token) // save JWT in memory
-        navigate("/dashboard")
-      } else {
-        setMessage(data.error || "Login failed")
-      }
+      await login(email, password)        // sets cookie + fetches /me
+      navigate("/dashboard")
     } catch (error) {
-      setMessage("Something went wrong")
+      setMessage(error.message || "Login failed")
     }
   }
 
@@ -40,5 +29,4 @@ function Login() {
     </div>
   )
 }
-
 export default Login

@@ -10,11 +10,17 @@ import Dashboard from './pages/dashboard.jsx'
 import ProblemPage from './pages/ProblemPage/problemPage.jsx'
 import AITutor from './pages/AITutorPage.jsx'
 import Payment from './pages/payment.jsx'
-// import AIInterview from './pages/AIInterviewPage.jsx' // when you have it
+// import AIInterview from './pages/AIInterviewPage.jsx'
 
 function ProtectedRoute({ children }) {
-  const { token } = useAuth()
-  return token ? children : <Navigate to="/get-started" />
+  const { isAuthed, loading } = useAuth()
+
+  if (loading) {
+    // While /me is being fetched
+    return <div>Loading...</div>
+  }
+
+  return isAuthed ? children : <Navigate to="/get-started" />
 }
 
 function App() {
@@ -32,12 +38,11 @@ function App() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard /> {/* default: problems list */}
+              <Dashboard />
             </ProtectedRoute>
           }
         />
 
-        {/* Normal problem solving (detail) */}
         <Route
           path="/problems/:id"
           element={
@@ -47,7 +52,6 @@ function App() {
           }
         />
 
-        {/* AI Tutor: LIST -> DETAIL (both show sidebar/active state) */}
         <Route
           path="/ai-tutor"
           element={
@@ -65,7 +69,6 @@ function App() {
           }
         />
 
-        {/* AI Interviewer: LIST -> DETAIL (enable detail when ready) */}
         <Route
           path="/ai-interview"
           element={
@@ -74,18 +77,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/*
-        <Route
-          path="/ai-interview/:id"
-          element={
-            <ProtectedRoute>
-              <AIInterview />
-            </ProtectedRoute>
-          }
-        />
-        */}
 
-        {/* Payment */}
         <Route
           path="/payment"
           element={

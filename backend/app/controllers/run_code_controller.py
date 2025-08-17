@@ -13,7 +13,7 @@ def parse_output(value):
     except Exception:
         return value
 
-@run_code_bp.route('/api/run', methods=['POST'])
+@run_code_bp.route('/run', methods=['POST'])
 def run_code():
     data = request.get_json()
     language = data.get('language')
