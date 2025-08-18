@@ -6,3 +6,52 @@
 .monaco-scrollable-element {
   height: 100% !important;
 }
+
+.editor-tutor-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+}
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.editor-toolbar .lang-pill {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #222;
+  font-size: 12px;
+}
+.results-pane {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.panel {
+  background: #0d0f12;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 8px;
+  overflow: auto;
+}
+
+/* Monaco decoration styles */
+.inline-error {
+  background: rgba(255, 0, 0, 0.15);
+  border-bottom: 2px solid rgba(255, 80, 80, 0.9);
+}
+.line-ok {
+  background: rgba(0, 255, 120, 0.1);
+}
+.glyph-error {
+  background: rgba(255, 0, 0, 0.9);
+  width: 6px;
+}
+.glyph-ok {
+  background: rgba(0, 200, 120, 0.9);
+  width: 6px;
+}

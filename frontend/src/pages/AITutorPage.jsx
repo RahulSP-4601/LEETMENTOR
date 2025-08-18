@@ -2,7 +2,7 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { useState, useEffect, useMemo, useRef } from "react"
 import Split from "react-split"
-import CodeEditor from "./../components/CodeEditor.jsx"
+import CodeEditor from "./../components/CodeTutorEditor.jsx"
 import "./../css/problemPage.css"
 import TestCase from "./../components/TestCase.jsx"
 import ReactMarkdown from "react-markdown"
@@ -348,7 +348,12 @@ function AITutorPage() {
 
             {/* Fill remaining height with Monaco */}
             <div className="editor-fill">
-              <CodeEditor language={language} code={code} setCode={setCode} />
+              <CodeEditor language={language}
+                problem={problem?.description}
+                problemId={numericId}
+                initialCode={code}
+                onCodeChange={setCode} 
+              />
             </div>
           </div>
 
