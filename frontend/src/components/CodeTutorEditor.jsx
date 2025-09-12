@@ -593,11 +593,9 @@ export default function CodeTutorEditor({
       <div className="editor-toolbar">
         <div className="left">
           <strong>Smart Tutor Editor</strong>
-          <span className="lang-pill">{language.toUpperCase()}</span>
         </div>
         <div className="right">
           <button disabled={busy || typing} onClick={handleGetCode}>Get Code</button>
-          <button disabled={busy} onClick={handleCompile}>Compile it</button>
         </div>
       </div>
 
