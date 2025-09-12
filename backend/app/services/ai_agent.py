@@ -1,9 +1,9 @@
 import os
-from .llm_client import call_gemini
+from .llm_client import call_openai
 
 # ----- Models -----
-FAST_MODEL = os.getenv("GEMINI_FAST_MODEL", "gemini-1.5-flash")
-CODE_MODEL = os.getenv("GEMINI_CODE_MODEL", "gemini-1.5-pro")
+FAST_MODEL = os.getenv("OPENAI_FAST_MODEL", "gpt-4o-mini")
+CODE_MODEL = os.getenv("OPENAI_CODE_MODEL", "gpt-4o")
 
 # ----- Prompts -----
 EXPLAIN_PROMPT = """You are LeetMentor AI Tutor.
@@ -49,10 +49,10 @@ CODE_FILL_PROMPT = """You are LeetMentor AI Tutor codegen (function body filler)
 Target language: {LANG}
 
 Return STRICT JSON (no markdown, no backticks) with EXACTLY:
-{{
+{
   "body": "<ONLY the function body statements (no signature, no outer braces/brackets)>",
   "helpers": "<0+ helper function definitions or empty string>"
-}}
+}
 
 Absolute rules (do NOT violate):
 - Output must be valid JSON only. No prose, no code fences, no comments outside JSON.
@@ -81,7 +81,6 @@ PROBLEM:
 SKELETON:
 {SKELETON}
 """
-
 
 REVIEW_PROMPT = """You are LeetMentor Code Reviewer.
 Given the problem and USER_CODE, analyze correctness and style.
@@ -118,21 +117,19 @@ def _normalize_lang(lang: str | None) -> str | None:
     if not lang:
         return None
     lang = str(lang).strip().lower()
-    # Map common Monaco ids to your API languages if needed
     aliases = {
         "js": "javascript",
         "c++": "cpp",
         "typescript": "javascript",  # if you route TS to JS runner
     }
     lang = aliases.get(lang, lang)
-    return lang if lang in _ALLOWED_LANGS else lang  # keep original if you support more
+    return lang if lang in _ALLOWED_LANGS else lang
 
 def _safe_truncate(text: str, max_chars: int = 16000) -> str:
     if not text:
         return ""
     if len(text) <= max_chars:
         return text
-    # keep head and tail to preserve context
     head = text[: max_chars // 2]
     tail = text[-max_chars // 2 :]
     return head + "\n\n# ... [truncated for length] ...\n\n" + tail
@@ -159,10 +156,10 @@ def run_agent(mode: str, *, problem: str, question: str = "", language: str | No
     try:
         if mode == "explain":
             prompt = EXPLAIN_PROMPT.format(PROBLEM=problem.strip())
-            return call_gemini(
+            return call_openai(
                 model,
-                [{"text": prompt}],
-                max_output_tokens=max_tokens,
+                [{"role": "user", "content": prompt}],
+                max_tokens=max_tokens,
                 temperature=temperature,
             )
 
@@ -170,10 +167,10 @@ def run_agent(mode: str, *, problem: str, question: str = "", language: str | No
             if not question.strip():
                 return None, "Missing question for QA mode"
             prompt = QA_PROMPT.format(PROBLEM=problem.strip(), QUESTION=question.strip())
-            return call_gemini(
+            return call_openai(
                 model,
-                [{"text": prompt}],
-                max_output_tokens=max_tokens,
+                [{"role": "user", "content": prompt}],
+                max_tokens=max_tokens,
                 temperature=temperature,
             )
 
@@ -181,10 +178,10 @@ def run_agent(mode: str, *, problem: str, question: str = "", language: str | No
             if not lang:
                 return None, "Missing language"
             prompt = CODE_PROMPT.format(LANG=lang, PROBLEM=problem.strip())
-            return call_gemini(
+            return call_openai(
                 model,
-                [{"text": prompt}],
-                max_output_tokens=max_tokens,
+                [{"role": "user", "content": prompt}],
+                max_tokens=max_tokens,
                 temperature=temperature,
             )
 
@@ -192,10 +189,10 @@ def run_agent(mode: str, *, problem: str, question: str = "", language: str | No
             if not lang:
                 return None, "Missing language"
             prompt = CODE_TUTOR_PROMPT.format(LANG=lang, PROBLEM=problem.strip())
-            return call_gemini(
+            return call_openai(
                 model,
-                [{"text": prompt}],
-                max_output_tokens=max_tokens,
+                [{"role": "user", "content": prompt}],
+                max_tokens=max_tokens,
                 temperature=temperature,
             )
 
@@ -209,12 +206,13 @@ def run_agent(mode: str, *, problem: str, question: str = "", language: str | No
                 PROBLEM=problem.strip(),
                 SKELETON=_safe_truncate(question),
             )
-            # If your llm client supports response_mime_type, add it there.
-            return call_gemini(
+            # Ask OpenAI for strict JSON
+            return call_openai(
                 model,
-                [{"text": prompt}],
-                max_output_tokens=max_tokens,
+                [{"role": "user", "content": prompt}],
+                max_tokens=max_tokens,
                 temperature=temperature,
+                response_format={"type": "json_object"},
             )
 
         if mode == "review":
@@ -225,15 +223,15 @@ def run_agent(mode: str, *, problem: str, question: str = "", language: str | No
             prompt = REVIEW_PROMPT.format(
                 PROBLEM=problem.strip(), LANG=lang, USER_CODE=_safe_truncate(question)
             )
-            return call_gemini(
+            return call_openai(
                 model,
-                [{"text": prompt}],
-                max_output_tokens=max_tokens,
+                [{"role": "user", "content": prompt}],
+                max_tokens=max_tokens,
                 temperature=temperature,
+                response_format={"type": "json_object"},  # enforce JSON for review
             )
 
         return None, "Invalid mode"
 
     except Exception as e:
-        # Make sure the controller can surface a meaningful message
         return None, f"LLM call failed: {type(e).__name__}: {e}"

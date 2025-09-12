@@ -1,8 +1,8 @@
 import os, time, hashlib, json, requests
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
-DEFAULT_TIMEOUT = float(os.getenv("GEMINI_HTTP_TIMEOUT", "18"))
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+DEFAULT_TIMEOUT = float(os.getenv("OPENAI_HTTP_TIMEOUT", "18"))
 
 class TTLCache:
     def __init__(self, ttl_secs=300, max_items=512):
@@ -12,7 +12,8 @@ class TTLCache:
 
     def get(self, key):
         item = self._store.get(key)
-        if not item: return None
+        if not item:
+            return None
         val, ts = item
         if time.time() - ts > self.ttl:
             self._store.pop(key, None)
@@ -32,33 +33,51 @@ def _hash_key(model: str, payload: dict) -> str:
     h.update(json.dumps(payload, sort_keys=True).encode())
     return h.hexdigest()
 
-def call_gemini(model: str, parts: list[dict], *,
-                max_output_tokens=512, temperature=0.2,
-                timeout: float = DEFAULT_TIMEOUT):
-    if not GEMINI_API_KEY:
-        return None, "Gemini API key not configured"
+def call_openai(
+    model: str,
+    messages: list[dict],
+    *,
+    max_tokens: int = 512,
+    temperature: float = 0.2,
+    response_format: dict | None = None,
+    timeout: float = DEFAULT_TIMEOUT,
+):
+    """
+    messages: [{"role":"user"|"system"|"assistant", "content":"..."}]
+    If you need strict JSON back, pass response_format={"type": "json_object"}.
+    """
+    if not OPENAI_API_KEY:
+        return None, "OpenAI API key not configured"
 
     payload = {
-        "contents": [{"parts": parts}],
-        "generationConfig": {
-            "maxOutputTokens": max_output_tokens,
-            "temperature": temperature,
-        },
+        "model": model,
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
     }
+    if response_format is not None:
+        payload["response_format"] = response_format
+
     key = _hash_key(model, payload)
     cached = CACHE.get(key)
     if cached:
         return cached, None
 
-    url = f"{BASE_URL}/{model}:generateContent?key={GEMINI_API_KEY}"
+    url = f"{BASE_URL}/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json",
+    }
     try:
-        resp = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, timeout=timeout)
+        resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
         if resp.status_code != 200:
             return None, resp.text
         data = resp.json()
-        text = (data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")) or ""
+        text = (data.get("choices", [{}])[0]
+                    .get("message", {})
+                    .get("content", "")) or ""
         if text:
             CACHE.set(key, text)
         return text, None
     except Exception as e:
-        return None, str(e)
+        return None, f"{type(e).__name__}: {e}"
