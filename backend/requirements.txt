@@ -3,4 +3,6 @@ Flask-SQLAlchemy
 psycopg2-binary
 Werkzeug
 requests
+openai>=1.30.0
+python-multipart
 

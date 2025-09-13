@@ -1,119 +1,126 @@
 // src/pages/AITutorPage.jsx
-import { useParams, useNavigate } from "react-router-dom"
-import { useState, useEffect, useMemo, useRef } from "react"
-import Split from "react-split"
-import CodeEditor from "./../components/CodeTutorEditor.jsx"
-import "./../css/problemPage.css"
-import TestCase from "./../components/TestCase.jsx"
-import ReactMarkdown from "react-markdown"
+import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo, useRef } from "react";
+import Split from "react-split";
+import CodeEditor from "./../components/CodeTutorEditor.jsx";
+import "./../css/problemPage.css";
+import TestCase from "./../components/TestCase.jsx";
+import ReactMarkdown from "react-markdown";
+import AudioTutor from "../components/audio.jsx";
 
-const languages = ["python", "javascript", "cpp", "java", "c"]
+const languages = ["python", "javascript", "cpp", "java", "c"];
 
 function AITutorPage() {
-  const { id } = useParams()
-  const navigate = useNavigate()
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   const numericId = useMemo(() => {
-    const n = Number(id)
-    return Number.isFinite(n) ? n : null
-  }, [id])
+    const n = Number(id);
+    return Number.isFinite(n) ? n : null;
+  }, [id]);
 
-  const [language, setLanguage] = useState("python")
-  const [code, setCode] = useState("")
+  const [language, setLanguage] = useState("python");
+  const [code, setCode] = useState("");
   const [chat, setChat] = useState([
     { role: "ai", text: "👋 Hi! I am your AI Tutor. I will guide you step-by-step for this problem." },
-  ])
-  const [userInput, setUserInput] = useState("")
-  const [problem, setProblem] = useState(null)
-  const [testCases, setTestCases] = useState([])
-  const [results, setResults] = useState([])
-  const [awaitingCodeConfirm, setAwaitingCodeConfirm] = useState(false)
-  const [awaitingLangSelect, setAwaitingLangSelect] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [starterLoading, setStarterLoading] = useState(false)
-  const [error, setError] = useState(null)
+  ]);
+  const [userInput, setUserInput] = useState("");
+  const [problem, setProblem] = useState(null);
+  const [testCases, setTestCases] = useState([]);
+  const [results, setResults] = useState([]);
+  const [awaitingCodeConfirm, setAwaitingCodeConfirm] = useState(false);
+  const [awaitingLangSelect, setAwaitingLangSelect] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [starterLoading, setStarterLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
+
+  // hidden audio element used for instant playback
+  const ttsRef = useRef(null);
+
+  // expose editor actions (CodeTutorEditor.jsx should assign: externalApiRef.current = { getCode: handleGetCode })
+  const codeApiRef = useRef(null);
 
   // Prevent double trigger of askAI on load
-  const alreadyAskedRef = useRef(false)
+  const alreadyAskedRef = useRef(false);
 
   // Load problem and (once) ask AI to explain
   useEffect(() => {
     if (!numericId) {
-      setError("Invalid problem id")
-      setLoading(false)
-      return
+      setError("Invalid problem id");
+      setLoading(false);
+      return;
     }
 
-    let cancelled = false
+    let cancelled = false;
     const run = async () => {
       try {
-        setLoading(true)
-        setError(null)
+        setLoading(true);
+        setError(null);
 
         const res = await fetch(`/api/problems/${numericId}`, {
           credentials: "include",
-        })
+        });
         if (!res.ok) {
-          throw new Error(`Failed to load problem (${res.status})`)
+          throw new Error(`Failed to load problem (${res.status})`);
         }
-        const data = await res.json()
+        const data = await res.json();
         if (!cancelled) {
-          setProblem(data.problem)
-          setTestCases(data.test_cases || [])
+          setProblem(data.problem);
+          setTestCases(data.test_cases || []);
 
-          // Ask the AI tutor only once after we have the problem
           if (!alreadyAskedRef.current && data.problem?.description) {
-            alreadyAskedRef.current = true
-            askAI("Explain the solution step by step.", data.problem.description, true)
+            alreadyAskedRef.current = true;
+            askAI("Explain the solution step by step.", data.problem.description, true);
           }
         }
       } catch (err) {
-        if (!cancelled) setError(err.message || "Failed to fetch problem")
+        if (!cancelled) setError(err.message || "Failed to fetch problem");
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) setLoading(false);
       }
-    }
-    run()
+    };
+    run();
     return () => {
-      cancelled = true
-    }
-  }, [numericId])
+      cancelled = true;
+    };
+  }, [numericId]);
 
   // Fetch starter code for selected language
   useEffect(() => {
-    if (!numericId || !language) return
+    if (!numericId || !language) return;
 
-    let cancelled = false
+    let cancelled = false;
     const run = async () => {
       try {
-        setStarterLoading(true)
+        setStarterLoading(true);
         const qs = new URLSearchParams({
           problem_id: String(numericId),
           language,
-        })
+        });
         const res = await fetch(`/api/starter?${qs.toString()}`, {
           credentials: "include",
-        })
+        });
         if (!res.ok) {
-          console.warn("Starter fetch not OK:", res.status)
-          return
+          console.warn("Starter fetch not OK:", res.status);
+          return;
         }
-        const data = await res.json()
-        const starter = data.starter ?? data.code ?? ""
-        if (!cancelled) setCode(starter)
+        const data = await res.json();
+        const starter = data.starter ?? data.code ?? "";
+        if (!cancelled) setCode(starter);
       } catch (err) {
-        console.error("Failed to fetch starter code:", err)
+        console.error("Failed to fetch starter code:", err);
       } finally {
-        if (!cancelled) setStarterLoading(false)
+        if (!cancelled) setStarterLoading(false);
       }
-    }
-    run()
+    };
+    run();
     return () => {
-      cancelled = true
-    }
-  }, [numericId, language])
+      cancelled = true;
+    };
+  }, [numericId, language]);
 
-  const handleGoBack = () => navigate("/dashboard")
+  const handleGoBack = () => navigate("/dashboard");
 
   const handleRunCode = async () => {
     try {
@@ -122,28 +129,73 @@ function AITutorPage() {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ language, code, problem_id: numericId }),
-      })
+      });
       if (!response.ok) {
-        const text = await response.text().catch(() => "")
-        throw new Error(`Run failed (${response.status})${text ? `: ${text}` : ""}`)
+        const text = await response.text().catch(() => "");
+        throw new Error(`Run failed (${response.status})${text ? `: ${text}` : ""}`);
       }
-      const data = await response.json()
-      setResults(data.results || [])
+      const data = await response.json();
+      setResults(data.results || []);
     } catch (error) {
-      console.error("Error executing code:", error)
+      console.error("Error executing code:", error);
     }
-  }
+  };
 
-  // Ask AI
+  // ----- helpers -----
+  const stopAllAudio = () => {
+    try {
+      if (ttsRef.current) {
+        ttsRef.current.pause();
+        ttsRef.current.currentTime = 0;
+        ttsRef.current.src = "";
+      }
+      // pause any visible <audio> in chat too
+      document.querySelectorAll(".chat-box-container audio").forEach((el) => {
+        try { el.pause(); } catch {}
+      });
+    } catch {}
+  };
+
+  // ESC shortcut to stop speaking
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") stopAllAudio(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const maybeHandleVoiceCommand = (text) => {
+    if (!text) return;
+
+    const t = text.toLowerCase();
+
+    // examples: "write code in my editor", "fill the code", "put the solution in the editor"
+    const wantsCode =
+      /write\s+code\s+in\s+my\s+editor/.test(t) ||
+      /fill\s+(the\s+)?code/.test(t) ||
+      /put\s+(the\s+)?solution\s+in\s+the\s+editor/.test(t) ||
+      /generate\s+code\s+in\s+editor/.test(t);
+
+    if (wantsCode) {
+      codeApiRef.current?.getCode?.();
+      setChat((prev) => [
+        ...prev,
+        { role: "ai", text: "🧠 Sure — generating code directly in your editor..." },
+      ]);
+    }
+  };
+
+  // Ask AI (text)
   const askAI = async (question, problemDesc = problem?.description, isAuto = false) => {
-    if (!isAuto && !question.trim()) return
+    if (!isAuto && !question.trim()) return;
 
     if (!isAuto) {
-      setUserInput("")
-      setChat((prev) => [...prev, { role: "user", text: question }])
+      // If typed command says "write code...", intercept and trigger editor
+      maybeHandleVoiceCommand(question);
+      setUserInput("");
+      setChat((prev) => [...prev, { role: "user", text: question }]);
     }
 
-    const mode = isAuto ? "explain" : "qa"
+    const mode = isAuto ? "explain" : "qa";
 
     try {
       const res = await fetch("/api/ai-tutor", {
@@ -152,48 +204,48 @@ function AITutorPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode,
-          question,           // populated for qa; harmless for explain
+          question, // populated for qa; harmless for explain
           problem: problemDesc,
         }),
-      })
+      });
       if (!res.ok) {
-        const text = await res.text().catch(() => "")
-        throw new Error(`AI tutor error (${res.status})${text ? `: ${text}` : ""}`)
+        const text = await res.text().catch(() => "");
+        throw new Error(`AI tutor error (${res.status})${text ? `: ${text}` : ""}`);
       }
-      const data = await res.json()
+      const data = await res.json();
       setChat((prev) => {
-        if (prev.some((m) => m.text === data.answer)) return prev
-        return [...prev, { role: "ai", text: data.answer }]
-      })
+        if (prev.some((m) => m.text === data.answer)) return prev;
+        return [...prev, { role: "ai", text: data.answer }];
+      });
 
       if (mode === "explain" && typeof data.answer === "string" && data.answer.includes("Would you like me to provide the code?")) {
-        setAwaitingCodeConfirm(true)
+        setAwaitingCodeConfirm(true);
       }
     } catch (error) {
-      console.error("Failed to get AI response:", error)
-      setChat((prev) => [...prev, { role: "ai", text: "⚠️ Sorry, I could not process your request." }])
+      console.error("Failed to get AI response:", error);
+      setChat((prev) => [...prev, { role: "ai", text: "⚠️ Sorry, I could not process your request." }]);
     }
-  }
+  };
 
   const handleCodeConfirm = (yes) => {
-    setAwaitingCodeConfirm(false)
+    setAwaitingCodeConfirm(false);
     if (yes) {
-      setAwaitingLangSelect(true)
+      setAwaitingLangSelect(true);
       setChat((prev) => [
         ...prev,
         { role: "ai", text: "Please select a language for the code implementation:" },
-      ])
+      ]);
     } else {
       setChat((prev) => [
         ...prev,
         { role: "ai", text: "Okay! Try solving it on your own first. 👍" },
-      ])
+      ]);
     }
-  }
+  };
 
   const requestCode = async (lang) => {
-    setAwaitingLangSelect(false)
-    setChat((prev) => [...prev, { role: "user", text: lang.toUpperCase() }])
+    setAwaitingLangSelect(false);
+    setChat((prev) => [...prev, { role: "user", text: lang.toUpperCase() }]);
 
     try {
       const res = await fetch("/api/ai-tutor", {
@@ -205,27 +257,62 @@ function AITutorPage() {
           language: lang,
           problem: problem?.description,
         }),
-      })
+      });
       if (!res.ok) {
-        const text = await res.text().catch(() => "")
-        throw new Error(`AI code error (${res.status})${text ? `: ${text}` : ""}`)
+        const text = await res.text().catch(() => "");
+        throw new Error(`AI code error (${res.status})${text ? `: ${text}` : ""}`);
       }
-      const data = await res.json()
+      const data = await res.json();
       setChat((prev) => [
         ...prev,
         { role: "ai", text: `Here is the ${lang.toUpperCase()} code:\n\n${data.answer}` },
-      ])
+      ]);
     } catch (error) {
-      console.error("Failed to get AI code:", error)
+      console.error("Failed to get AI code:", error);
       setChat((prev) => [
         ...prev,
         { role: "ai", text: "⚠️ Could not fetch the code right now." },
-      ])
+      ]);
     }
-  }
+  };
+
+  // Voice exchange handler — used by AudioTutor to push messages here
+  const handleVoiceExchange = (userMsg, aiMsg) => {
+    // If user commanded via voice to write code — do it
+    maybeHandleVoiceCommand(userMsg?.text || "");
+
+    setChat((prev) => [
+      ...prev,
+      { role: "user", text: userMsg.text },
+      { role: "ai", text: aiMsg.text, audioUrl: aiMsg.audioUrl },
+    ]);
+
+    // Try to autoplay immediately through a hidden audio element
+    if (aiMsg?.audioUrl && ttsRef.current) {
+      try {
+        ttsRef.current.src = aiMsg.audioUrl;
+        const playPromise = ttsRef.current.play();
+        if (playPromise?.catch) {
+          playPromise.catch(() => setAutoplayBlocked(true));
+        }
+      } catch {
+        setAutoplayBlocked(true);
+      }
+    }
+  };
+
+  const replayAudio = (url) => {
+    if (!url || !ttsRef.current) return;
+    try {
+      ttsRef.current.src = url;
+      ttsRef.current.play().catch(() => setAutoplayBlocked(true));
+    } catch {
+      setAutoplayBlocked(true);
+    }
+  };
 
   if (loading) {
-    return <div className="problem-container">Loading problem...</div>
+    return <div className="problem-container">Loading problem...</div>;
   }
 
   if (error) {
@@ -237,7 +324,7 @@ function AITutorPage() {
           Go Back
         </button>
       </div>
-    )
+    );
   }
 
   if (!problem) {
@@ -248,11 +335,14 @@ function AITutorPage() {
           Go Back
         </button>
       </div>
-    )
+    );
   }
 
   return (
     <div className="problem-container">
+      {/* Hidden audio tag to auto-play new TTS replies */}
+      <audio ref={ttsRef} style={{ display: "none" }} />
+
       {/* OUTER SPLIT: Left (AI tutor) | Right (Editor + Tests) */}
       <Split
         className="outer-split"
@@ -264,12 +354,51 @@ function AITutorPage() {
       >
         {/* LEFT SECTION */}
         <div className="left-section">
-          <h1>{problem.title} (AI Tutor)</h1>
+          {/* Header row with Stop button */}
+          <div className="left-header" style={{display:"flex", alignItems:"center", justifyContent:"space-between", gap: 8}}>
+            <h1 style={{margin:0}}>{problem.title} (AI Tutor)</h1>
+            <button
+              className="stop-tts-btn"
+              onClick={stopAllAudio}
+              title="Stop AI audio (Esc)"
+              style={{
+                padding: "6px 10px",
+                borderRadius: 8,
+                border: "1px solid #444",
+                background: "#2b2b2b",
+                color: "#fff",
+                cursor: "pointer"
+              }}
+            >
+              ⏹ Stop
+            </button>
+          </div>
+
+          {autoplayBlocked && (
+            <div className="hint-banner" style={{ margin: "8px 0", fontSize: 12, opacity: 0.85 }}>
+              🔇 Your browser blocked autoplay. Click any <b>play</b> button or press the mic once to enable sound.
+            </div>
+          )}
 
           <div className="chat-box-container">
             {chat.map((msg, idx) => (
               <div key={idx} className={`chat-msg ${msg.role}`}>
                 <ReactMarkdown>{msg.text}</ReactMarkdown>
+
+                {/* If AI message has audio, show a player + replay/stop buttons */}
+                {msg.role === "ai" && msg.audioUrl && (
+                  <div style={{ marginTop: 6 }}>
+                    <audio controls src={msg.audioUrl} style={{ width: "100%" }} />
+                    <div style={{ marginTop: 4, display: "flex", gap: 8 }}>
+                      <button className="btn btn-secondary" onClick={() => replayAudio(msg.audioUrl)}>
+                        🔁 Replay
+                      </button>
+                      <button className="btn" onClick={stopAllAudio}>
+                        ⏹ Stop
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
 
@@ -302,6 +431,15 @@ function AITutorPage() {
             <button className="mic-button" onClick={() => askAI(userInput)}>
               Send
             </button>
+
+            {/* Mic: pressing it interrupts any current TTS, then starts recording in AudioTutor */}
+            <span onMouseDown={stopAllAudio} onTouchStart={stopAllAudio}>
+              <AudioTutor
+                problemText={problem?.description || ""}
+                compact={true}
+                onExchange={handleVoiceExchange}
+              />
+            </span>
           </div>
         </div>
 
@@ -348,11 +486,13 @@ function AITutorPage() {
 
             {/* Fill remaining height with Monaco */}
             <div className="editor-fill">
-              <CodeEditor language={language}
+              <CodeEditor
+                language={language}
                 problem={problem?.description}
                 problemId={numericId}
                 initialCode={code}
-                onCodeChange={setCode} 
+                onCodeChange={setCode}
+                externalApiRef={codeApiRef}  // parent→child imperative API
               />
             </div>
           </div>
@@ -364,7 +504,7 @@ function AITutorPage() {
         </Split>
       </Split>
     </div>
-  )
+  );
 }
 
-export default AITutorPage
+export default AITutorPage;
